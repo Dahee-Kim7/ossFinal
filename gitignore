@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+
+# SQLite 사용자 데이터 (회원정보/수강정보/찜목록)
+back/data/
+*.db
