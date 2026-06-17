@@ -367,6 +367,16 @@ GENERAL_COURSES = [
 
 COURSES = MAJOR_COURSES + GENERAL_COURSES
 
-# 각 과목에 검색용 요일/교시 토큰을 미리 계산해서 추가
+# 학점 예외 목록 (기본값 3학점)
+_CREDIT_EXCEPTIONS = {
+    "I020-1-8101-01": 2, "I020-2-8086-01": 2,
+    "I020-2-8482-01": 1, "I020-3-3704-01": 1, "I020-3-3831-01": 1,
+    "I030-1-8998-01": 1, "I030-2-8484-01": 2,
+    "I030-4-3683-01": 2, "I030-4-3685-01": 2,
+    "I060-1-4278-01": 2, "I060-1-4287-01": 2,
+}
+
+# 각 과목에 검색용 요일/교시 토큰 및 학점을 미리 계산해서 추가
 for _course in COURSES:
     _course["schedule"] = parse_schedule(_course["time"])
+    _course["credit"] = _CREDIT_EXCEPTIONS.get(_course["code"], 3)

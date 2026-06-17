@@ -169,7 +169,8 @@ class RecommendRequest(BaseModel):
     department: str
     levels: List[int] = []
     day_time: Optional[str] = None
-    username: Optional[str] = None  # 로그인한 사용자가 있으면 '이미 들은 과목' 자동 제외
+    credit: Optional[int] = None  # 1, 2, 3 중 하나. None이면 전체
+    username: Optional[str] = None
 
 
 def _normalize_day_time(text: str) -> Optional[str]:
@@ -184,12 +185,6 @@ def _normalize_day_time(text: str) -> Optional[str]:
 
 @app.post("/recommend")
 def recommend(req: RecommendRequest):
-    """
-    1) department: 선택한 학과(또는 교양 영역)와 정확히 일치하는 과목만 대상으로 함
-    2) levels: 선택된 난이도(1~4)에 해당하는 과목만 필터링 (비어있으면 전체 통과)
-    3) day_time: '화1' 형태로 들어오면, 해당 요일/교시에 수업이 있는 과목만 필터링
-    4) username이 주어지면, 해당 사용자가 '이미 들은 과목'으로 등록한 과목은 제외
-    """
     day_time_token = _normalize_day_time(req.day_time) if req.day_time else None
 
     taken_codes = set()
@@ -206,18 +201,23 @@ def recommend(req: RecommendRequest):
             continue
         if day_time_token and day_time_token not in c["schedule"]:
             continue
+        if req.credit is not None and c.get("credit", 3) != req.credit:
+            continue
 
         reasons = [f"{req.department} 소속 과목"]
         if req.levels:
             reasons.append(f"난이도 {c['level']} (선택한 난이도에 포함)")
         if day_time_token:
             reasons.append(f"{day_time_token} 시간에 강의 진행")
+        if req.credit is not None:
+            reasons.append(f"{req.credit}학점 과목")
 
         results.append({
             "code": c["code"],
             "name": c["name"],
             "department": c["department"],
             "level": c["level"],
+            "credit": c.get("credit", 3),
             "professor": c["professor"],
             "time": c["time"],
             "reason": " / ".join(reasons),

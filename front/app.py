@@ -265,6 +265,23 @@ def page_search(username):
     day_time_input = st.text_input("요일교시", placeholder="예: 화1  (화요일 1교시)",
                                    label_visibility="collapsed")
 
+    st.markdown('<p class="filter-label">학점 (미선택 시 전체)</p>', unsafe_allow_html=True)
+    credit_cols = st.columns(3)
+    credit_labels = ["1학점", "2학점", "3학점"]
+    if "credit" not in st.session_state:
+        st.session_state.credit = None
+    for i, (col, label) in enumerate(zip(credit_cols, credit_labels), start=1):
+        with col:
+            selected = st.session_state.credit == i
+            if st.button(
+                label,
+                key=f"credit_{i}",
+                use_container_width=True,
+                type="primary" if selected else "secondary",
+            ):
+                st.session_state.credit = None if selected else i
+                st.rerun()
+
     st.markdown("<br>", unsafe_allow_html=True)
 
     if st.button("과목 검색", type="primary", use_container_width=True):
@@ -273,6 +290,7 @@ def page_search(username):
                 "department": department,
                 "levels": selected_levels,
                 "day_time": day_time_input.strip() or None,
+                "credit": st.session_state.credit,
                 "username": username,
             })
             st.session_state.search_result = res.json()
@@ -313,7 +331,8 @@ def page_search(username):
             st.markdown(
                 f'<div class="{card_class}">'
                 f'<p class="course-name">{c["name"]}'
-                f'<span class="level-badge">난이도 {c["level"]}</span></p>'
+                f'<span class="level-badge">난이도 {c["level"]}</span>'
+                f'<span class="level-badge">{c.get("credit", 3)}학점</span></p>'
                 f'<p class="course-meta">{c["professor"]}</p>'
                 f'<p class="course-meta">{c["time"]}</p>'
                 f'<span class="course-code">{c["code"]}</span>'
